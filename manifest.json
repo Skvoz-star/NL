@@ -1,6 +1,6 @@
 {
-  "name": "Dutch TTS",
-  "short_name": "DutchTTS",
+  "name": "Dutch",
+  "short_name": "Dutch",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#ffffff",
@@ -12,4 +12,5 @@
       "type": "image/png"
     }
   ]
+
 }
