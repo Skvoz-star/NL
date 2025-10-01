@@ -355,11 +355,17 @@
       utterance.lang = "nl-NL";
 
       // Попытка выбрать голос nl-NL
-      const voices = synth.getVoices();
-      const dutchVoice = voices.find(v => v.lang === "nl-NL");
-      if (dutchVoice) utterance.voice = dutchVoice;
+     if (!reverseMode) {
+        const utterance = new SpeechSynthesisUtterance(current.nl);
+        utterance.lang = "nl-NL";
 
-      synth.speak(utterance);
+        // Попытка выбрать голос nl-NL
+        const voices = synth.getVoices();
+        const dutchVoice = voices.find(v => v.lang === "nl-NL");
+        if (dutchVoice) utterance.voice = dutchVoice;
+
+        synth.speak(utterance);
+      }
       //
       hintBox.textContent = current.example.nl;
       const correctAnswer = reverseMode ? current.nl : current.ru;
@@ -430,4 +436,5 @@
 </body>
 
 </html>
+
 
