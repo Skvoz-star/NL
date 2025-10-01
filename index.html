@@ -1,0 +1,428 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Nederlands — Flashcards Quiz</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background: #f9f9f9;
+      color: #222;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+    .app {
+      max-width: 600px;
+      width: 100%;
+      /*background: #fff;
+      border: 1px solid #ddd;*/
+      border-radius: 8px;
+      padding: 20px;
+      /*box-shadow: 0 4px 10px rgba(0,0,0,0.1);*/
+      text-align: center;
+    }
+    h1 {
+      margin: 0 0 20px;
+      font-size: 22px;
+    }
+    .prompt {
+      font-size: 28px;
+      margin: 20px 0;
+    }
+    .options {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin: 20px 0;
+    }
+    .option {
+      padding: 14px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      background: #f2f2f2;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background 0.2s;
+    }
+    .option.correct {
+      background: #c8f7c5;
+      border-color: #3cba54;
+    }
+    .option.wrong {
+      background: #f7c5c5;
+      border-color: #ba3c3c;
+    }
+    .stats {
+      margin-top: 10px;
+      font-size: 14px;
+      color: #666;
+    }
+    .hint {
+      margin-top: 15px;
+      font-size: 14px;
+      color: #555;
+      display: none;
+    }
+    #hintBtn {
+      margin-top: 10px;
+      padding: 6px 12px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    #modeToggle {
+      margin-top: 10px;
+      padding: 6px 12px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="prompt" id="prompt">Нажмите "Начать"</div>
+    <div class="options" id="options"></div><button id="modeToggle">Режим: NL → RU</button>
+    <button id="startBtn" style="    padding: 6px 12px;">Начать</button>
+    
+    <div class="stats">
+      Правильно: <span id="correctCount">0</span> · Ошибок: <span id="wrongCount">0</span> · Осталось: <span id="remaining">0</span>
+    </div>
+    <button id="hintBtn" style="display:none">Показать подсказку</button>
+    <div class="hint" id="hintBox"></div>
+  </div>
+
+  <script>
+   const WORDS = [
+    {nl:'samen', ru:'вместе', example:{nl:'We werken samen aan het project.'}},
+    {nl:'alleen', ru:'один/только', example:{nl:'Ik woon alleen.'}},
+    {nl:'ja', ru:'да', example:{nl:'Ja, dat klopt.'}},
+    {nl:'nee', ru:'нет', example:{nl:'Nee, dank je.'}},
+    {nl:'huis', ru:'дом', example:{nl:'Ons huis is groot.'}},
+    {nl:'werk', ru:'работа', example:{nl:'Ik ga naar mijn werk.'}},
+    {nl:'vriend', ru:'друг', example:{nl:'Mijn vriend woont hier.'}},
+    {nl:'tijd', ru:'время', example:{nl:'Ik heb geen tijd.'}},
+    {nl:'vrouw', ru:'женщина', example:{nl:'De vrouw leest een boek.'}},
+    {nl:'man', ru:'мужчина', example:{nl:'De man werkt in de tuin.'}},
+    {nl:'kind', ru:'ребёнок', example:{nl:'Het kind speelt buiten.'}},
+    {nl:'school', ru:'школа', example:{nl:'De kinderen gaan naar school.'}},
+    {nl:'jaar', ru:'год', example:{nl:'Ik ben dit jaar naar Spanje gegaan.'}},
+    {nl:'dag', ru:'день', example:{nl:'Vandaag is een mooie dag.'}},
+    {nl:'geld', ru:'деньги', example:{nl:'Ik heb geen geld bij me.'}},
+    {nl:'taal', ru:'язык', example:{nl:'Nederlands is een mooie taal.'}},
+    {nl:'stad', ru:'город', example:{nl:'Amsterdam is een grote stad.'}},
+    {nl:'land', ru:'страна', example:{nl:'Nederland is een klein land.'}},
+    {nl:'eten', ru:'есть/еда', example:{nl:'Ik hou van lekker eten.'}},
+    {nl:'drinken', ru:'пить', example:{nl:'We drinken water.'}},
+    {nl:'zien', ru:'видеть', example:{nl:'Ik zie de vogels in de lucht.'}},
+    {nl:'horen', ru:'слышать', example:{nl:'Ik hoor muziek.'}},
+    {nl:'denken', ru:'думать', example:{nl:'Ik denk dat het goed is.'}},
+    {nl:'spreken', ru:'говорить', example:{nl:'Hij spreekt drie talen.'}},
+    {nl:'lopen', ru:'идти/ходить', example:{nl:'Wij lopen naar huis.'}},
+    {nl:'rijden', ru:'ехать', example:{nl:'Hij rijdt een auto.'}},
+    {nl:'komen', ru:'приходить', example:{nl:'Zij komt morgen langs.'}},
+    {nl:'gaan', ru:'идти', example:{nl:'Wij gaan naar het park.'}},
+    {nl:'blijven', ru:'оставаться', example:{nl:'Ik blijf thuis.'}},
+    {nl:'nemen', ru:'брать', example:{nl:'Neem een stoel, alstublieft.'}},
+    {nl:'geven', ru:'давать', example:{nl:'Hij geeft mij een boek.'}},
+    {nl:'weten', ru:'знать', example:{nl:'Ik weet het antwoord.'}},
+    {nl:'vinden', ru:'находить/считать', example:{nl:'Ik vind dit leuk.'}},
+    {nl:'werken', ru:'работать', example:{nl:'Ik werk in een winkel.'}},
+    {nl:'slapen', ru:'спать', example:{nl:'Ik slaap acht uur per nacht.'}},
+    {nl:'blij', ru:'счастливый', example:{nl:'Ik ben blij met mijn cadeau.'}},
+    {nl:'mooi', ru:'красивый', example:{nl:'Dat is een mooi huis.'}},
+    {nl:'slecht', ru:'плохой', example:{nl:'Het weer is slecht vandaag.'}},
+    {nl:'groot', ru:'большой', example:{nl:'De hond is groot.'}},
+    {nl:'klein', ru:'маленький', example:{nl:'Het meisje is klein.'}},
+    {nl:'oud', ru:'старый', example:{nl:'Mijn opa is oud.'}},
+    {nl:'nieuw', ru:'новый', example:{nl:'Ik heb een nieuwe fiets.'}},
+    {nl:'veel', ru:'много', example:{nl:'Er zijn veel mensen hier.'}},
+    {nl:'weinig', ru:'мало', example:{nl:'Er is weinig tijd.'}},
+    {nl:'altijd', ru:'всегда', example:{nl:'Ik ben altijd op tijd.'}},
+    {nl:'nooit', ru:'никогда', example:{nl:'Hij komt nooit te laat.'}},
+    {nl:'soms', ru:'иногда', example:{nl:'Ik ga soms naar de bioscoop.'}},
+    {nl:'vandaag', ru:'сегодня', example:{nl:'Vandaag is het maandag.'}},
+    {nl:'morgen', ru:'завтра', example:{nl:'Morgen ga ik naar mijn oma.'}},
+    {nl:'gisteren', ru:'вчера', example:{nl:'Gisteren was het druk.'}},
+    {nl:'waar', ru:'где', example:{nl:'Waar is de supermarkt?' }},
+    {nl:'wanneer', ru:'когда', example:{nl:'Wanneer begint de film?' }},
+    {nl:'wie', ru:'кто', example:{nl:'Wie is dat meisje?' }},
+    {nl:'wat', ru:'что', example:{nl:'Wat doe je?' }},
+    {nl:'hoe', ru:'как', example:{nl:'Hoe gaat het met je?' }},
+    {nl:'waarom', ru:'почему', example:{nl:'Waarom lach je?' }},
+    {nl:'misschien', ru:'может быть', example:{nl:'Misschien komt hij later.'}},
+    {nl:'nu', ru:'сейчас', example:{nl:'Ik ben nu thuis.'}},
+    {nl:'straks', ru:'позже', example:{nl:'Ik bel je straks.'}},
+    {nl:'toen', ru:'тогда', example:{nl:'Toen ik jong was, woonde ik hier.'}},
+    {nl:'dan', ru:'затем/тогда', example:{nl:'Dan gaan we naar huis.'}},
+    {nl:'dus', ru:'итак/значит', example:{nl:'Het regent, dus we blijven binnen.'}},
+    {nl:'omdat', ru:'потому что', example:{nl:'Ik ga naar bed omdat ik moe ben.'}},
+    {nl:'als', ru:'если/когда', example:{nl:'Als het regent, blijf ik thuis.'}},
+    {nl:'met', ru:'с', example:{nl:'Ik ga met mijn vrienden.'}},
+    {nl:'zonder', ru:'без', example:{nl:'Koffie zonder suiker, alstublieft.'}},
+    {nl:'voor', ru:'для/перед', example:{nl:'Dit cadeau is voor jou.'}},
+    {nl:'achter', ru:'за', example:{nl:'De tuin ligt achter het huis.'}},
+    {nl:'op', ru:'на', example:{nl:'Het boek ligt op de tafel.'}},
+    {nl:'in', ru:'в', example:{nl:'Ik woon in Nederland.'}},
+    {nl:'uit', ru:'из', example:{nl:'Ik kom uit Rusland.'}},
+    {nl:'naar', ru:'к/в', example:{nl:'Ik ga naar school.'}},
+    {nl:'bij', ru:'у/возле', example:{nl:'Ik ben bij mijn ouders.'}},
+    {nl:'boven', ru:'над/сверху', example:{nl:'De lamp hangt boven de tafel.'}},
+    {nl:'onder', ru:'под', example:{nl:'De kat zit onder de stoel.'}},
+    {nl:'tussen', ru:'между', example:{nl:'De winkel ligt tussen de bank en de bakker.'}},
+    {nl:'tegen', ru:'против', example:{nl:'Hij praat tegen zijn vriend.'}},
+    {nl:'door', ru:'через/сквозь', example:{nl:'We lopen door het park.'}},
+    {nl:'over', ru:'о/через', example:{nl:'We praten over muziek.'}},
+    {nl:'lang', ru:'длинный/долго', example:{nl:'Het is een lange weg.'}},
+    {nl:'kort', ru:'короткий', example:{nl:'De film is te kort.'}},
+    {nl:'eerste', ru:'первый', example:{nl:'Dit is mijn eerste auto.'}},
+    {nl:'laatste', ru:'последний', example:{nl:'Dit is de laatste kans.'}},
+    {nl:'vroeg', ru:'рано', example:{nl:'Ik sta vroeg op.'}},
+    {nl:'laat', ru:'поздно', example:{nl:'Hij komt altijd laat.'}},
+    {nl:'snel', ru:'быстро', example:{nl:'De trein is snel.'}},
+    {nl:'langzaam', ru:'медленно', example:{nl:'Hij loopt langzaam.'}},
+    {nl:'belangrijk', ru:'важный', example:{nl:'Het is belangrijk om te leren.'}},
+    {nl:'moeilijk', ru:'трудный', example:{nl:'Deze oefening is moeilijk.'}},
+    {nl:'makkelijk', ru:'легкий', example:{nl:'Dat examen was makkelijk.'}},
+    {nl:'hard', ru:'трудный/жёсткий', example:{nl:'Het bed is te hard.'}},        // 101
+{nl:'zacht', ru:'мягкий', example:{nl:'Het kussen is zacht.'}},               // 102
+{nl:'warm', ru:'тёплый', example:{nl:'Het water is warm.'}},                  // 103
+{nl:'koud', ru:'холодный', example:{nl:'De koffie is koud.'}},                // 104
+{nl:'licht', ru:'светлый/лёгкий', example:{nl:'De kamer is licht.'}},        // 105
+{nl:'donker', ru:'тёмный', example:{nl:'Het is donker buiten.'}},             // 106
+{nl:'jong', ru:'молодой', example:{nl:'Hij is nog jong.'}},                   // 107
+{nl:'oud', ru:'старый', example:{nl:'Mijn opa is oud.'}},                     // 108
+{nl:'hoog', ru:'высокий', example:{nl:'De berg is hoog.'}},                   // 109
+{nl:'laag', ru:'низкий', example:{nl:'Het geluid is te laag.'}},              // 110
+{nl:'dik', ru:'толстый', example:{nl:'Het boek is dik.'}},                    // 111
+{nl:'dun', ru:'тонкий/худой', example:{nl:'Het meisje is dun.'}},             // 112
+{nl:'sterk', ru:'сильный', example:{nl:'Hij is sterk.'}},                     // 113
+{nl:'zwak', ru:'слабый', example:{nl:'Ik voel me zwak.'}},                    // 114
+{nl:'schoon', ru:'чистый', example:{nl:'De keuken is schoon.'}},              // 115
+{nl:'vuil', ru:'грязный', example:{nl:'De straat is vuil.'}},                 // 116
+{nl:'open', ru:'открытый', example:{nl:'De winkel is open.'}},                // 117
+{nl:'dicht', ru:'закрытый', example:{nl:'De deur is dicht.'}},                // 118
+{nl:'vol', ru:'полный', example:{nl:'Het glas is vol.'}},                     // 119
+{nl:'leeg', ru:'пустой', example:{nl:'De fles is leeg.'}},                    // 120
+{nl:'eerlijk', ru:'честный', example:{nl:'Hij is een eerlijk man.'}},         // 121
+{nl:'oneerlijk', ru:'нечестный', example:{nl:'Dat was oneerlijk.'}},          // 122
+{nl:'gezond', ru:'здоровый', example:{nl:'Groente is gezond.'}},              // 123
+{nl:'ziek', ru:'больной', example:{nl:'Ik ben ziek vandaag.'}},               // 124
+{nl:'rijk', ru:'богатый', example:{nl:'Zij is erg rijk.'}},                   // 125
+{nl:'arm', ru:'бедный', example:{nl:'De man is arm.'}},                       // 126
+{nl:'duur', ru:'дорогой', example:{nl:'Dat horloge is duur.'}},               // 127
+{nl:'goedkoop', ru:'дешёвый', example:{nl:'Deze schoenen zijn goedkoop.'}},   // 128
+{nl:'vriendelijk', ru:'дружелюбный', example:{nl:'De leraar is vriendelijk.'}}, // 129
+{nl:'onvriendelijk', ru:'недружелюбный', example:{nl:'De ober was onvriendelijk.'}}, // 130
+{nl:'interessant', ru:'интересный', example:{nl:'Het boek is interessant.'}}, // 131
+{nl:'saai', ru:'скучный', example:{nl:'De les is saai.'}},                    // 132
+{nl:'druk', ru:'занятой/оживлённый', example:{nl:'Het is druk in de stad.'}}, // 133
+{nl:'rustig', ru:'спокойный', example:{nl:'De straat is rustig.'}},           // 134
+{nl:'nat', ru:'мокрый', example:{nl:'Mijn jas is nat.'}},                     // 135
+{nl:'droog', ru:'сухой', example:{nl:'De handdoek is droog.'}},               // 136
+{nl:'snelheid', ru:'скорость', example:{nl:'De auto heeft veel snelheid.'}},  // 137
+{nl:'kracht', ru:'сила', example:{nl:'Water heeft veel kracht.'}},            // 138
+{nl:'liefde', ru:'любовь', example:{nl:'Liefde is belangrijk.'}},             // 139
+{nl:'haat', ru:'ненависть', example:{nl:'Haat is gevaarlijk.'}},              // 140
+{nl:'vrede', ru:'мир', example:{nl:'Wij willen vrede.'}},                     // 141
+{nl:'oorlog', ru:'война', example:{nl:'De oorlog is voorbij.'}},              // 142
+{nl:'zee', ru:'море', example:{nl:'De zee is blauw.'}},                       // 143
+{nl:'rivier', ru:'река', example:{nl:'De rivier is breed.'}},                 // 144
+{nl:'meer', ru:'озеро', example:{nl:'Het meer is diep.'}},                    // 145
+{nl:'berg', ru:'гора', example:{nl:'De berg is hoog.'}},                      // 146
+{nl:'bos', ru:'лес', example:{nl:'Het bos is groen.'}},                       // 147
+{nl:'boom', ru:'дерево', example:{nl:'De boom is oud.'}},                     // 148
+{nl:'bloem', ru:'цветок', example:{nl:'De bloem is mooi.'}},                  // 149
+{nl:'gras', ru:'трава', example:{nl:'Het gras is groen.'}},                   // 150
+{nl:'hemel', ru:'небо', example:{nl:'De hemel is blauw.'}},                   // 151
+{nl:'zon', ru:'солнце', example:{nl:'De zon schijnt.'}},                      // 152
+{nl:'maan', ru:'луна', example:{nl:'De maan is rond.'}},                      // 153
+{nl:'ster', ru:'звезда', example:{nl:'De ster twinkelt.'}},                   // 154
+{nl:'lucht', ru:'воздух/небо', example:{nl:'De lucht is schoon.'}},           // 155
+{nl:'regen', ru:'дождь', example:{nl:'De regen stopt.'}},                     // 156
+{nl:'sneeuw', ru:'снег', example:{nl:'De sneeuw is wit.'}},                   // 157
+{nl:'wind', ru:'ветер', example:{nl:'De wind waait hard.'}},                  // 158
+{nl:'weer', ru:'погода', example:{nl:'Het weer is mooi.'}},                   // 159
+{nl:'seizoen', ru:'сезон', example:{nl:'De zomer is mijn favoriete seizoen.'}}, // 160
+{nl:'lente', ru:'весна', example:{nl:'De lente is warm.'}},                   // 161
+{nl:'zomer', ru:'лето', example:{nl:'De zomer is heet.'}},                    // 162
+{nl:'herfst', ru:'осень', example:{nl:'De herfst is nat.'}},                  // 163
+{nl:'winter', ru:'зима', example:{nl:'De winter is koud.'}},                  // 164
+{nl:'eten', ru:'еда', example:{nl:'Eten is nodig.'}},                         // 165
+{nl:'brood', ru:'хлеб', example:{nl:'Ik eet brood.'}},                        // 166
+{nl:'kaas', ru:'сыр', example:{nl:'Nederland staat bekend om kaas.'}},        // 167
+{nl:'melk', ru:'молоко', example:{nl:'Kinderen drinken melk.'}},              // 168
+{nl:'vlees', ru:'мясо', example:{nl:'Ik eet geen vlees.'}},                   // 169
+{nl:'vis', ru:'рыба', example:{nl:'De vis zwemt in het water.'}},             // 170
+{nl:'groente', ru:'овощи', example:{nl:'Groente is gezond.'}},                // 171
+{nl:'fruit', ru:'фрукты', example:{nl:'Fruit is lekker.'}},                   // 172
+{nl:'appel', ru:'яблоко', example:{nl:'De appel is rood.'}},                  // 173
+{nl:'peer', ru:'груша', example:{nl:'De peer is zoet.'}},                     // 174
+{nl:'banaan', ru:'банан', example:{nl:'De banaan is geel.'}},                 // 175
+{nl:'aardappel', ru:'картофель', example:{nl:'Aardappels zijn populair.'}},   // 176
+{nl:'tomaat', ru:'помидор', example:{nl:'De tomaat is rood.'}},               // 177
+{nl:'ui', ru:'лук', example:{nl:'De ui is sterk.'}},                          // 178
+{nl:'wortel', ru:'морковь', example:{nl:'De wortel is oranje.'}},             // 179
+{nl:'sla', ru:'салат', example:{nl:'De sla is vers.'}},                       // 180
+{nl:'rijst', ru:'рис', example:{nl:'Wij eten rijst.'}},                       // 181
+{nl:'soep', ru:'суп', example:{nl:'De soep is warm.'}},                       // 182
+{nl:'water', ru:'вода', example:{nl:'Water is belangrijk.'}},                 // 183
+{nl:'bier', ru:'пиво', example:{nl:'Bier is populair in Nederland.'}},        // 184
+{nl:'wijn', ru:'вино', example:{nl:'Ik drink rode wijn.'}},                   // 185
+{nl:'koffie', ru:'кофе', example:{nl:'Koffie is warm.'}},                     
+{nl:'thee', ru:'чай', example:{nl:'Ik drink graag thee.'}},                
+{nl:'sap', ru:'сок', example:{nl:'Ik drink appelsap.'}},                   
+{nl:'ontbijt', ru:'завтрак', example:{nl:'Ontbijt is belangrijk.'}},       
+{nl:'lunch', ru:'обед', example:{nl:'Wij eten lunch om 12 uur.'}},         
+{nl:'avondeten', ru:'ужин', example:{nl:'Avondeten is om 18 uur.'}},      
+{nl:'taart', ru:'пирог/торт', example:{nl:'De taart is lekker.'}},        
+{nl:'koekje', ru:'печенье', example:{nl:'Ik eet een koekje.'}},             
+{nl:'ijs', ru:'мороженое/лёд', example:{nl:'Het ijs is koud.'}},            
+{nl:'suiker', ru:'сахар', example:{nl:'Te veel suiker is slecht.'}},        
+{nl:'zout', ru:'соль', example:{nl:'Zout maakt eten lekker.'}},             
+{nl:'peper', ru:'перец', example:{nl:'Peper is pittig.'}},                  
+{nl:'olie', ru:'масло/нефть', example:{nl:'Olijfolie is gezond.'}},         
+{nl:'boter', ru:'сливочное масло', example:{nl:'Boter op brood.'}},          
+{nl:'ei', ru:'яйцо', example:{nl:'Een ei is rond.'}},                        
+
+
+    ];
+
+    let pool = [];
+    let current = null;
+    let correct = 0, wrong = 0;
+    let reverseMode = false; // false = NL→RU, true = RU→NL
+
+    const promptEl = document.getElementById('prompt');
+    const optionsEl = document.getElementById('options');
+    const correctCountEl = document.getElementById('correctCount');
+    const wrongCountEl = document.getElementById('wrongCount');
+    const remainingEl = document.getElementById('remaining');
+    const startBtn = document.getElementById('startBtn');
+    const hintBox = document.getElementById('hintBox');
+    const hintBtn = document.getElementById('hintBtn');
+    const modeToggle = document.getElementById('modeToggle');
+
+    /////////
+    const synth = window.speechSynthesis;
+    // Голоса подгружаются асинхронно
+    window.speechSynthesis.onvoiceschanged = () => {
+      console.log(synth.getVoices());
+    };
+
+    
+
+    //////////////
+
+    startBtn.addEventListener('click', startSession);
+    hintBtn.addEventListener('click', ()=>{
+      hintBox.style.display = 'block';
+      hintBtn.style.display = 'none';
+    });
+    modeToggle.addEventListener('click', ()=>{
+      reverseMode = !reverseMode;
+      modeToggle.textContent = reverseMode ? 'Режим: RU → NL' : 'Режим: NL → RU';
+    });
+
+    function startSession(){
+      pool = shuffle([...WORDS]);
+      correct = 0; wrong = 0;
+      updateStats();
+      startBtn.style.display = 'none';
+      loadNext();
+    }
+
+    function loadNext(){
+      hintBox.style.display = 'none';
+      hintBtn.style.display = 'inline-block';
+      if(pool.length === 0){
+        promptEl.textContent = 'Сессия завершена!';
+        optionsEl.innerHTML = '';
+        startBtn.textContent = 'Начать заново';
+        startBtn.style.display = 'inline-block';
+        hintBtn.style.display = 'none';
+        return;
+      }
+      current = pool.shift();
+      promptEl.textContent = reverseMode ? current.ru : current.nl;
+      //
+      const utterance = new SpeechSynthesisUtterance(current.nl);
+      utterance.lang = "nl-NL";
+
+      // Попытка выбрать голос nl-NL
+      const voices = synth.getVoices();
+      const dutchVoice = voices.find(v => v.lang === "nl-NL");
+      if (dutchVoice) utterance.voice = dutchVoice;
+
+      synth.speak(utterance);
+      //
+      hintBox.textContent = current.example.nl;
+      const correctAnswer = reverseMode ? current.nl : current.ru;
+
+      const choices = new Set([correctAnswer]);
+      while(choices.size < 4){
+        const pick = WORDS[Math.floor(Math.random()*WORDS.length)];
+        choices.add(reverseMode ? pick.nl : pick.ru);
+      }
+
+      optionsEl.innerHTML = '';
+      shuffle(Array.from(choices)).forEach(opt =>{
+        const b = document.createElement('button');
+        b.className = 'option';
+        b.textContent = opt;
+        b.addEventListener('click', ()=>{
+          handleAnswer(b, opt === correctAnswer, correctAnswer);
+        });
+        optionsEl.appendChild(b);
+      });
+    }
+ 
+    function handleAnswer(button, isCorrect, correctAnswer){
+      const buttons = document.querySelectorAll('.option');
+      buttons.forEach(btn => {
+        btn.disabled = true;
+        if(btn.textContent === correctAnswer){
+          btn.classList.add('correct');
+        } else if(btn === button && !isCorrect){
+          btn.classList.add('wrong');
+        }
+      });
+
+      if(isCorrect){
+        correct++;
+      } else {
+        wrong++;
+      }
+      updateStats();
+
+      setTimeout(()=>{
+        loadNext();
+      }, 1200);
+    }
+
+    function updateStats(){
+      correctCountEl.textContent = correct;
+      wrongCountEl.textContent = wrong;
+      remainingEl.textContent = pool.length;
+    }
+
+    function shuffle(a){
+      for(let i=a.length-1;i>0;i--){
+        const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]];
+      }
+      return a;
+    }
+
+  </script>
+    <script>
+    // Регистрируем service worker
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js')
+        .then(() => console.log('Service Worker registered'))
+        .catch(console.error);
+    }
+  </script>
+</body>
+</html>
