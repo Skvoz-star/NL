@@ -1,1 +1,195 @@
-<!doctype html><html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Nederlands — Flashcards Quiz</title><link rel="manifest" href="manifest.json"></head><body><div class="app"><div class="prompt" id="prompt">Загрузка слов...</div><div class="options" id="options"></div><button id="modeToggle">Режим: NL → RU</button><button id="startBtn">Начать</button><div class="stats">Правильно: <span id="correctCount">0</span> · Ошибок: <span id="wrongCount">0</span> · Осталось: <span id="remaining">0</span></div><button id="hintBtn" style="display:none">Показать подсказку</button><div id="hintBox"></div></div><script>let WORDS=[];fetch('./words.json').then(r=>r.json()).then(d=>{WORDS=d;document.getElementById('prompt').textContent='Нажмите "Начать"'});</script></body></html>
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Nederlands — Flashcards Quiz</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#222222">
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; background: #f9f9f9; color: #222; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+    .app { max-width: 600px; width: 100%; border-radius: 8px; padding: 20px; text-align: center; }
+    .prompt { font-size: 28px; margin: 20px 0; }
+    .options { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 20px 0; }
+    .option { padding: 14px; border: 1px solid #ccc; border-radius: 6px; background: #f2f2f2; cursor: pointer; font-size: 16px; transition: background 0.2s; }
+    .option.correct { background: #c8f7c5; border-color: #3cba54; }
+    .option.wrong { background: #f7c5c5; border-color: #ba3c3c; }
+    .stats { margin-top: 10px; font-size: 14px; color: #666; }
+    .hint { margin-top: 15px; font-size: 14px; color: #555; display: none; line-height: 1.4; }
+    button { margin-top: 10px; padding: 6px 12px; font-size: 14px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="prompt" id="prompt">Загрузка слов...</div>
+    <div class="options" id="options"></div>
+    <button id="modeToggle">Режим: NL → RU</button>
+    <button id="startBtn" disabled>Начать</button>
+    <div class="stats">
+      Правильно: <span id="correctCount">0</span> · Ошибок: <span id="wrongCount">0</span> · Осталось: <span id="remaining">0</span>
+    </div>
+    <button id="hintBtn" style="display:none">Показать подсказку</button>
+    <button id="etymologyBtn" style="display:none">Показать этимологию</button>
+    <div class="hint" id="hintBox"></div>
+    <div class="hint" id="etymologyBox"></div>
+  </div>
+
+  <script>
+    let WORDS = [];
+    let pool = [];
+    let current = null;
+    let correct = 0;
+    let wrong = 0;
+    let reverseMode = false;
+
+    const promptEl = document.getElementById('prompt');
+    const optionsEl = document.getElementById('options');
+    const correctCountEl = document.getElementById('correctCount');
+    const wrongCountEl = document.getElementById('wrongCount');
+    const remainingEl = document.getElementById('remaining');
+    const startBtn = document.getElementById('startBtn');
+    const hintBox = document.getElementById('hintBox');
+    const hintBtn = document.getElementById('hintBtn');
+    const etymologyBox = document.getElementById('etymologyBox');
+    const etymologyBtn = document.getElementById('etymologyBtn');
+    const modeToggle = document.getElementById('modeToggle');
+    const synth = window.speechSynthesis;
+
+    fetch('./words.json')
+      .then(response => {
+        if (!response.ok) throw new Error('Cannot load words.json');
+        return response.json();
+      })
+      .then(words => {
+        WORDS = Array.isArray(words) ? words.filter(w => w && w.nl && w.ru) : [];
+        if (!WORDS.length) throw new Error('words.json is empty');
+        promptEl.textContent = 'Нажмите "Начать"';
+        startBtn.disabled = false;
+        updateStats();
+      })
+      .catch(error => {
+        console.error(error);
+        promptEl.textContent = 'Ошибка загрузки словаря';
+      });
+
+    startBtn.addEventListener('click', startSession);
+    hintBtn.addEventListener('click', () => {
+      hintBox.style.display = 'block';
+      hintBtn.style.display = 'none';
+    });
+    etymologyBtn.addEventListener('click', () => {
+      etymologyBox.style.display = 'block';
+      etymologyBtn.style.display = 'none';
+    });
+    modeToggle.addEventListener('click', () => {
+      reverseMode = !reverseMode;
+      modeToggle.textContent = reverseMode ? 'Режим: RU → NL' : 'Режим: NL → RU';
+      if (current) renderCurrent();
+    });
+
+    function startSession() {
+      if (!WORDS.length) return;
+      pool = shuffle([...WORDS]);
+      correct = 0;
+      wrong = 0;
+      updateStats();
+      startBtn.style.display = 'none';
+      loadNext();
+    }
+
+    function loadNext() {
+      hintBox.style.display = 'none';
+      etymologyBox.style.display = 'none';
+      hintBtn.style.display = 'inline-block';
+      etymologyBtn.style.display = 'inline-block';
+
+      if (pool.length === 0) {
+        promptEl.textContent = 'Сессия завершена!';
+        optionsEl.innerHTML = '';
+        startBtn.textContent = 'Начать заново';
+        startBtn.style.display = 'inline-block';
+        hintBtn.style.display = 'none';
+        etymologyBtn.style.display = 'none';
+        current = null;
+        return;
+      }
+
+      current = pool.shift();
+      renderCurrent();
+    }
+
+    function renderCurrent() {
+      promptEl.textContent = reverseMode ? current.ru : current.nl;
+
+      if (!reverseMode) speakDutch(current.nl);
+
+      const exampleText = current.example && current.example.nl ? current.example.nl : 'Примера пока нет.';
+      hintBox.textContent = exampleText;
+      etymologyBox.textContent = current.etymology || 'Этимология пока не добавлена.';
+
+      const correctAnswer = reverseMode ? current.nl : current.ru;
+      const choices = new Set([correctAnswer]);
+      while (choices.size < 4 && choices.size < WORDS.length) {
+        const pick = WORDS[Math.floor(Math.random() * WORDS.length)];
+        choices.add(reverseMode ? pick.nl : pick.ru);
+      }
+
+      optionsEl.innerHTML = '';
+      shuffle(Array.from(choices)).forEach(optionText => {
+        const button = document.createElement('button');
+        button.className = 'option';
+        button.textContent = optionText;
+        button.addEventListener('click', () => handleAnswer(button, optionText === correctAnswer, correctAnswer));
+        optionsEl.appendChild(button);
+      });
+    }
+
+    function handleAnswer(button, isCorrect, correctAnswer) {
+      document.querySelectorAll('.option').forEach(btn => {
+        btn.disabled = true;
+        if (btn.textContent === correctAnswer) {
+          btn.classList.add('correct');
+        } else if (btn === button && !isCorrect) {
+          btn.classList.add('wrong');
+        }
+      });
+
+      if (isCorrect) correct++;
+      else wrong++;
+      updateStats();
+      setTimeout(loadNext, 1200);
+    }
+
+    function updateStats() {
+      correctCountEl.textContent = correct;
+      wrongCountEl.textContent = wrong;
+      remainingEl.textContent = pool.length;
+    }
+
+    function speakDutch(text) {
+      if (!window.speechSynthesis) return;
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'nl-NL';
+      const voices = synth.getVoices();
+      const dutchVoice = voices.find(v => v.lang === 'nl-NL');
+      if (dutchVoice) utterance.voice = dutchVoice;
+      synth.cancel();
+      synth.speak(utterance);
+    }
+
+    function shuffle(items) {
+      for (let i = items.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [items[i], items[j]] = [items[j], items[i]];
+      }
+      return items;
+    }
+  </script>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js').catch(console.error);
+    }
+  </script>
+</body>
+</html>
