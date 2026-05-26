@@ -1,1 +1,80 @@
-[{"nl":"de keuze","ru":"выбор"},{"nl":"de ervaring","ru":"опыт"},{"nl":"de zorg","ru":"забота"},{"nl":"de kans","ru":"шанс"},{"nl":"de mening","ru":"мнение"},{"nl":"de afspraak","ru":"встреча"},{"nl":"de beurt","ru":"очередь"},{"nl":"de omgeving","ru":"окружение"},{"nl":"de bedoeling","ru":"намерение"},{"nl":"de gewoonte","ru":"привычка"},{"nl":"het verschil","ru":"разница"},{"nl":"het voordeel","ru":"преимущество"},{"nl":"de ruzie","ru":"ссора"}]
+[
+  {
+    "nl": "de keuze",
+    "ru": "выбор",
+    "example": { "nl": "Dat is mijn keuze." },
+    "etymology": "Связано с глаголом kiezen — выбирать. Keuze — результат выбора."
+  },
+  {
+    "nl": "de ervaring",
+    "ru": "опыт",
+    "example": { "nl": "Ik heb ervaring met computers." },
+    "etymology": "От ervaren — испытывать, переживать, узнавать на опыте. Ervaring — то, что пережил и усвоил."
+  },
+  {
+    "nl": "de zorg",
+    "ru": "забота / уход / здравоохранение",
+    "example": { "nl": "Ik zorg voor mijn kat." },
+    "etymology": "Связано с zorgen voor — заботиться о. Zorg может значить личную заботу или сферу здравоохранения."
+  },
+  {
+    "nl": "de kans",
+    "ru": "шанс / вероятность / возможность",
+    "example": { "nl": "Ik heb een kans." },
+    "etymology": "Связано с идеей случая и возможности. Запоминать как chance: kans ≈ шанс."
+  },
+  {
+    "nl": "de mening",
+    "ru": "мнение",
+    "example": { "nl": "Dat is mijn mening." },
+    "etymology": "От menen — считать, полагать. Mening — то, что человек считает."
+  },
+  {
+    "nl": "de afspraak",
+    "ru": "встреча / договорённость / запись",
+    "example": { "nl": "Ik heb een afspraak met de dokter." },
+    "etymology": "От afspreken — договариваться. Afspraak — договорённость или назначенная встреча."
+  },
+  {
+    "nl": "de beurt",
+    "ru": "очередь / ход",
+    "example": { "nl": "Jij bent aan de beurt." },
+    "etymology": "Запоминай через выражение aan de beurt zijn — быть на очереди / чей-то ход."
+  },
+  {
+    "nl": "de omgeving",
+    "ru": "окружение / окрестности",
+    "example": { "nl": "De omgeving is mooi." },
+    "etymology": "Om значит вокруг. Omgeving — то, что находится вокруг."
+  },
+  {
+    "nl": "de bedoeling",
+    "ru": "намерение / замысел / смысл",
+    "example": { "nl": "Wat is de bedoeling?" },
+    "etymology": "От bedoelen — иметь в виду, подразумевать. Bedoeling — то, что имелось в виду."
+  },
+  {
+    "nl": "de gewoonte",
+    "ru": "привычка / обычай",
+    "example": { "nl": "Roken is geen goede gewoonte." },
+    "etymology": "От gewoon — обычный. Gewoonte — то, что стало обычным."
+  },
+  {
+    "nl": "het verschil",
+    "ru": "разница / отличие",
+    "example": { "nl": "Het verschil is niet groot." },
+    "etymology": "Связано с verschillen — отличаться. Verschil — результат отличия."
+  },
+  {
+    "nl": "het voordeel",
+    "ru": "преимущество / польза / выгода",
+    "example": { "nl": "Dat is een voordeel." },
+    "etymology": "Voor — впереди / перед, deel — часть. Voordeel — то, что даёт плюс или преимущество."
+  },
+  {
+    "nl": "de ruzie",
+    "ru": "ссора / конфликт",
+    "example": { "nl": "Ik wil geen ruzie." },
+    "etymology": "Для запоминания: звучит резко, похоже на ситуацию ругани. Это не строгая этимология, а мнемоника."
+  }
+]
