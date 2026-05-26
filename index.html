@@ -8,15 +8,16 @@
   <meta name="theme-color" content="#222222">
   <style>
     body { font-family: Arial, sans-serif; margin: 0; background: #f9f9f9; color: #222; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-    .app { max-width: 600px; width: 100%; border-radius: 8px; padding: 20px; text-align: center; }
+    .app { max-width: 720px; width: 100%; border-radius: 8px; padding: 20px; text-align: center; }
     .prompt { font-size: 28px; margin: 20px 0; }
-    .options { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 20px 0; }
+    .options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 20px 0; }
     .option { padding: 14px; border: 1px solid #ccc; border-radius: 6px; background: #f2f2f2; cursor: pointer; font-size: 16px; transition: background 0.2s; }
     .option.correct { background: #c8f7c5; border-color: #3cba54; }
     .option.wrong { background: #f7c5c5; border-color: #ba3c3c; }
     .stats { margin-top: 10px; font-size: 14px; color: #666; }
     .hint { margin-top: 15px; font-size: 14px; color: #555; display: none; line-height: 1.4; }
     button { margin-top: 10px; padding: 6px 12px; font-size: 14px; cursor: pointer; }
+    @media (max-width: 520px) { .options { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
@@ -35,6 +36,7 @@
   </div>
 
   <script>
+    const OPTIONS_COUNT = 6;
     let WORDS = [];
     let pool = [];
     let current = null;
@@ -129,7 +131,8 @@
 
       const correctAnswer = reverseMode ? current.nl : current.ru;
       const choices = new Set([correctAnswer]);
-      while (choices.size < 4 && choices.size < WORDS.length) {
+      const targetChoices = Math.min(OPTIONS_COUNT, WORDS.length);
+      while (choices.size < targetChoices) {
         const pick = WORDS[Math.floor(Math.random() * WORDS.length)];
         choices.add(reverseMode ? pick.nl : pick.ru);
       }
